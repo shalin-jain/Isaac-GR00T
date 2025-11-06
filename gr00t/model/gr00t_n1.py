@@ -177,7 +177,7 @@ class GR00T_N1(PreTrainedModel):
         backbone_outputs = self.backbone(backbone_inputs)
         action_head_outputs = self.action_head.get_action(backbone_outputs, action_inputs)
         self.validate_data(action_head_outputs, backbone_outputs, is_training=False)
-        return action_head_outputs
+        return (action_head_outputs, backbone_outputs)
 
     def prepare_input(self, inputs) -> Tuple[BatchFeature, BatchFeature]:
         self.validate_inputs(inputs)
