@@ -16,7 +16,7 @@
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -143,7 +143,7 @@ class Gr00tPolicy(BasePolicy):
         """
         return self._modality_transform.unapply(action)
 
-    def get_action(self, observations: Dict[str, Any]) -> Dict[str, Any]:
+    def get_action(self, observations: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
         Make a prediction with the model.
         Args:
@@ -161,7 +161,7 @@ class Gr00tPolicy(BasePolicy):
         }
 
         Returns:
-            Dict[str, Any]: The predicted action.
+            Tuple[Dict[str, Any], Dict[str, Any]]: The predicted action and backbone outputs.
         """
         # let the get_action handles both batch and single input
         is_batch = self._check_state_is_batched(observations)
@@ -177,9 +177,9 @@ class Gr00tPolicy(BasePolicy):
 
         if not is_batch:
             unnormalized_action = squeeze_dict_values(unnormalized_action)
-        return unnormalized_action, backbone_outputs
+        return (unnormalized_action, backbone_outputs)
 
-    def _get_action_from_normalized_input(self, normalized_input: Dict[str, Any]) -> torch.Tensor:
+    def _get_action_from_normalized_input(self, normalized_input: Dict[str, Any]) -> Tuple:
         # Set up autocast context if needed
         with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=COMPUTE_DTYPE):
             (model_pred, backbone_outputs) = self.model.get_action(normalized_input)
