@@ -172,20 +172,20 @@ class Gr00tPolicy(BasePolicy):
         # Apply transforms
         normalized_input = self.apply_transforms(observations)
 
-        (normalized_action, backbone_outputs) = self._get_action_from_normalized_input(normalized_input)
+        (normalized_action, backbone_outputs, action_inputs) = self._get_action_from_normalized_input(normalized_input)
         unnormalized_action = self._get_unnormalized_action(normalized_action)
 
         if not is_batch:
             unnormalized_action = squeeze_dict_values(unnormalized_action)
-        return (unnormalized_action, backbone_outputs)
+        return (unnormalized_action, backbone_outputs, action_inputs)
 
     def _get_action_from_normalized_input(self, normalized_input: Dict[str, Any]) -> Tuple:
         # Set up autocast context if needed
         with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=COMPUTE_DTYPE):
-            (model_pred, backbone_outputs) = self.model.get_action(normalized_input)
+            (model_pred, backbone_outputs, action_inputs) = self.model.get_action(normalized_input)
 
         normalized_action = model_pred["action_pred"].float()
-        return (normalized_action, backbone_outputs)
+        return (normalized_action, backbone_outputs, action_inputs)
 
     def _get_unnormalized_action(self, normalized_action: torch.Tensor) -> Dict[str, Any]:
         return self.unapply_transforms({"action": normalized_action.cpu()})
